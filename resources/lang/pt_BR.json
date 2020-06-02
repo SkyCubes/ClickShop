@@ -1,0 +1,38 @@
+{
+	"PLUGIN_SUCCESSFULLY_ENABLED": "{arg1} foi ativado com sucesso!",
+
+	"BUY": "Comprar",
+	"SELL": "Vender",
+	"FOR": "Por",
+	"OFFICIAL_SHOP": "Loja Oficial",
+
+	"FORM_SHOP_CREATION_TITLE": "Criar nova loja",
+	"FORM_SHOP_COMERCIALIZED_ITEM": "Você está comercializando este item:",
+	"FORM_SHOP_TYPE_LABEL": "O que você deseja fazer?",
+	"FORM_SHOP_TYPE_OPTION_SELL": "Quero vender",
+	"FORM_SHOP_TYPE_OPTION_BUY": "Quero comprar",
+	"FORM_SHOP_PRICE_LABEL": "Valor desejado",
+	"FORM_SHOP_PRICE_PLACEHOLDER": "0,00",
+	"FORM_SHOP_QTD_LABEL": "Quantidade de itens por venda",
+	"FORM_SHOP_IS_OFFICIAL": "Loja Oficial",
+	"CLICK_SIGN_TO_CREATE_SHOP": "Clique em uma placa para criar a loja.",
+	"SIGN_NEEDS_TO_BE_CLOSE_CHEST": "É preciso que a placa esteja proxima à um baú.",
+
+	"FORM_SHOP_USING_TITLE": "Loja de {arg1}",
+	"FORM_SHOP_BUYING_LABEL": "Você está comprando:",
+	"FORM_SHOP_SELLING_LABEL": "Você está vendendo:",
+	"FORM_SHOP_ENABLE_ONECLICK": "Ativar {arg1} para esta loja",
+	"FORM_SHOP_ONECLICK_DESCRIPTION": "Com {arg1} você não verá este formulário até sua proxima sessão e comprará/venderá diretamente da placa.",
+	"FORM_SHOP_PRESS_ESC_OR_X": "Clique no 'X' para cancelar",
+
+	"YOU_ENABLED_ONECLICK": "Você ativou {arg1} para esta loja durante esta sessão.",
+
+	"NO_CHEST_FOUND": "Loja sem baús proximos.",
+	"OUT_OF_STOCK": "Sem estoque.",
+	"FULL_INVENTORY": "Seu inventário está cheio.",
+	"YOU_DO_NOT_HAVE_ITEM": "Você não {arg1} {arg2} no inventário para vender.",
+	"YOU_DONT_HAVE_MONEY_ENOUGH": "Você não tem dinheiro suficiente para esta compra.",
+	"OWNER_DONT_HAVE_MONEY_ENOUGH": "{arg1} não tem dinheiro suficiente para comprar de você.",
+	"YOU_BOUGHT": "Você comprou {arg1} {arg2} por {arg3}!",
+	"YOU_SOLD": "Você vendeu {arg1} {arg2} por {arg3}!"
+}
