@@ -1,0 +1,18 @@
+name: ClickShop
+version: 1.0.0
+author: DanMetzkr
+api: 3.0.0
+main: skycubes\clickshop\ClickShop
+description: Criação de lojas para compra e venda com placas e baús
+depend: Economy
+commands:
+  loja:
+    description: Gerenciar sua loja
+    aliases:
+      - 'shop'
+  info:
+    description: Mostra o ID do item na mão
+    usage: /info
+  id:
+    description: Mostra o item relativo ao ID informado
+    usage: /id
