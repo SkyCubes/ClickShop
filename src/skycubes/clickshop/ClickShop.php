@@ -27,6 +27,7 @@ class ClickShop extends PluginBase implements Listener{
 	private $definitions;
 	private $skyforms;
 	private $economy;
+	private $shopIds;
 
 	protected $shopCreationQueue = [];
 
@@ -48,6 +49,7 @@ class ClickShop extends PluginBase implements Listener{
 		$this->getServer()->getPluginManager()->registerEvents($this, $this);
 
 		$this->config = new Config($this->getDataFolder()."config.yml", Config::YAML);
+		$this->shopIds = new Config($this->getDataFolder()."shopids.yml", Config::YAML);
 
 		$this->translator = new Translate($this);
 
@@ -134,6 +136,7 @@ class ClickShop extends PluginBase implements Listener{
 				"value" => $price,
 				"itemID" => $item->getId(),
 				"itemName" => $item->getName(),
+				"item" => $item,
 				"official" => $isOfficial
 			);
 
@@ -153,6 +156,7 @@ class ClickShop extends PluginBase implements Listener{
 		$player = $event->getPlayer();
 		$block = $event->getBlock();
 		$item = $event->getItem();
+
 		if($block->getId() == 63 || $block->getId() == 68){
 
 			$position = new Vector3($block->getX(), $block->getY(), $block->getZ());
@@ -160,6 +164,7 @@ class ClickShop extends PluginBase implements Listener{
 
 			// if action is TAP with 'left click'
 			if($event->getAction() === 0){
+
 
 				if(isset($this->shopCreationQueue[$player->getName()])){ // CHECK IF EXISTS SHOP CREATION QUEUE
 
@@ -177,18 +182,20 @@ class ClickShop extends PluginBase implements Listener{
 							$player->addTitle("\n", "§c".$this->translator->get('SIGN_NEEDS_TO_BE_CLOSE_CHEST'), 20, 2*20, 20);
 							return false;
 						}
-
 					}
+
+
+					$shopId = $this->createShopId($shopInfos['item']);
 
 					$shopTypeString = $shopInfos['type'] ? "§cComprar" : "§aVender";
 					if($shopInfos['official']){
-						$line1 = "§d[".$this->translator->get('OFFICIAL_SHOP')."]";
+						$line1 = "§´§l§d[".$this->translator->get('OFFICIAL_SHOP')."]";
 					}else{
-						$line1 = "§b[".$player->getName()."]";
+						$line1 = "§´§l§b[".$player->getName()."]";
 					}
-					$line2 = $shopTypeString." §7".$shopInfos['qtd'];
-					$line3 = "§b".substr($shopInfos['itemName'], 0, 12);
-					$line4 = "§fPor §e$".$shopInfos['value']." §8[".$shopInfos['itemID']."]";
+					$line2 = "§´§l".$shopTypeString." §7".$shopInfos['qtd'];
+					$line3 = "§´§l§b".substr($shopInfos['itemName'], 0, 12);
+					$line4 = "§´§l§fPor §e$".$shopInfos['value']." §8[".$shopId."]";
 
 					$sign->setText($line1, $line2, $line3, $line4);
 
@@ -254,13 +261,21 @@ class ClickShop extends PluginBase implements Listener{
 							return false;
 						}
 
-						if(preg_match("/(?:§8\[)((?:[\d]+)(?:[:][\w]+)?)/", $sign->getLine(3), $signData)){
-							$itemID = intval($signData[1]);
+						if(preg_match("/(?:§8\[)([\w]+)(?:\])/", $sign->getLine(3), $signData)){
+							$shopId = $signData[1];
 						}else{
 							return false;
 						}
 
-						$item = Item::get($itemID, 0, $qtd);
+						
+
+						$item = $this->getShopItem($shopId);
+						if(!($item instanceof Item)){
+							$player->addTitle("\n", "§c".$this->translator->get('INVALID_SHOP'), 20, 2*20, 20);
+							return false;
+						}
+
+						$item->setCount($qtd);
 						$itemName = $item->getName();
 						
 						$priceString = "$".$price;
@@ -268,7 +283,7 @@ class ClickShop extends PluginBase implements Listener{
 
 						// CHECK IF 'ONECLICK' FEATURE IS ENABLED FOR THIS SHOP SIGN AND SESSION
 						// ALSO CHECK IF ITEM IN THE SHOP IS THE SAME, TO AVOID FRAUDS
-						if($this->isEnabledOneClick($player->getName(), $block, $itemID)){
+						if($this->isEnabledOneClick($player->getName(), $block, $shopId)){
 							
 							if(!$isOfficial){
 								if($this->checkInventories($player, $playerContent, $chestContent, $item, $shopType)){
@@ -295,22 +310,29 @@ class ClickShop extends PluginBase implements Listener{
 								// $shopType:
 								// True = Buying Shop | False = Selling Shop
 								if($shopType){
+
 									if($playerContent->canAddItem($item)){
+
 										if($this->economy->getWallet($player->getName(), 'SkyCoins') >= $price){
 											$this->economy->removeMoney($player->getName(), 'SkyCoins', $price);
 											$playerContent->addItem($item);
 											$player->addTitle("\n", "§a".$this->translator->get('YOU_BOUGHT', ["§7".$qtd."x", "§b".$itemName."§a", "§e".$priceString."§a"]), 20, 2*20, 20);
+										}else{
+											$player->addTitle("\n", "§c".$this->translator->get('YOU_DONT_HAVE_MONEY_ENOUGH'), 20, 2*20, 20);
 										}
+
 									}else{
 										$player->addTitle("\n", "§c".$this->translator->get('FULL_INVENTORY'), 20, 2*20, 20);
 									}
+
 								}else{
+
 									if($playerContent->contains($item)){
-										if($this->economy->getWallet($player->getName(), 'SkyCoins') >= $price){
-											$this->economy->giveMoney($player->getName(), 'SkyCoins', $price);
-											$playerContent->removeItem($item);
-											$player->addTitle("\n", "§a".$this->translator->get('YOU_SOLD', ["§7".$qtd."x", "§b".$itemName."§a", "§e".$priceString."§a"]), 20, 2*20, 20);
-										}
+
+										$this->economy->giveMoney($player->getName(), 'SkyCoins', $price);
+										$playerContent->removeItem($item);
+										$player->addTitle("\n", "§a".$this->translator->get('YOU_SOLD', ["§7".$qtd."x", "§b".$itemName."§a", "§e".$priceString."§a"]), 20, 2*20, 20);
+									
 									}else{
 										$player->addTitle("\n", "§c".$this->translator->get('YOU_DO_NOT_HAVE_ITEM', ["§7".$qtd."x", "§b".$itemName."§c"]), 20, 2*20, 20);
 									}
@@ -326,7 +348,7 @@ class ClickShop extends PluginBase implements Listener{
 							}
 							$form = $this->skyforms->createCustomForm($formTitle);
 
-							$actionLabel = $shopType ? $this->translator->get('FORM_SHOP_BUYING_LABEL') : $this->translator->get('FORM_SHOP_SELLING_LABEL');
+							$actionLabel = $shopType ? $this->translator->get('FORM_SHOP_BUYING_LABEL', ['§c']) : $this->translator->get('FORM_SHOP_SELLING_LABEL', ['§a']);
 							$form->addLabel($actionLabel);
 							$form->addLabel("§7".$qtd."x §b".$itemName);
 							$form->addLabel("§7".$forString.": §e $".$price);
@@ -335,11 +357,12 @@ class ClickShop extends PluginBase implements Listener{
 							$form->addToggle($this->translator->get('FORM_SHOP_ENABLE_ONECLICK', ["§aOneClick§r"]), false);
 							$form->addLabel("§8".$this->translator->get('FORM_SHOP_PRESS_ESC_OR_X'));
 
-							$form->sendTo($player, function($response) use (&$player, &$shopOwner, &$block, &$item, &$shopType, &$playerContent, &$chestContent, &$price){
+							$form->sendTo($player, function($response) use (&$player, &$shopOwner, &$block, &$item, &$shopType, &$playerContent, &$chestContent, &$price, &$shopId){
 								$qtd = $item->getCount();
 								$itemName = $item->getName();
 								$priceString = "$".$price;
-								
+
+																
 								// CHECK IF SHOP ISN'T OFFICIAL (COMPARING NAMES BECAUSE ITS INSIDE CLOSURE)
 								if($shopOwner != $this->translator->get('OFFICIAL_SHOP')){
 									if($this->checkInventories($player, $playerContent, $chestContent, $item, $shopType)){
@@ -363,7 +386,7 @@ class ClickShop extends PluginBase implements Listener{
 
 											if($response[$this->translator->get('FORM_SHOP_ENABLE_ONECLICK', ["§aOneClick§r"])]){
 												$player->sendTip($this->translator->get('YOU_ENABLED_ONECLICK', ["§aOneClick§r"]));
-												$this->enableOneClick($player->getName(), $block, $item->getId());
+												$this->enableOneClick($player->getName(), $block, $shopId);
 											}
 										}
 										
@@ -375,25 +398,37 @@ class ClickShop extends PluginBase implements Listener{
 									// $shopType:
 									// True = Buying Shop | False = Selling Shop
 									if($shopType){
+
+										
+
 										if($playerContent->canAddItem($item)){
+
 											if($this->economy->getWallet($player->getName(), 'SkyCoins') >= $price){
+
 												$this->economy->removeMoney($player->getName(), 'SkyCoins', $price);
 												$playerContent->addItem($item);
 												$player->addTitle("\n", "§a".$this->translator->get('YOU_BOUGHT', ["§7".$qtd."x", "§b".$itemName."§a", "§e".$priceString."§a"]), 20, 2*20, 20);
+											}else{
+												$player->addTitle("\n", "§c".$this->translator->get('YOU_DONT_HAVE_MONEY_ENOUGH'), 20, 2*20, 20);
 											}
+
 										}else{
 											$player->addTitle("\n", "§c".$this->translator->get('FULL_INVENTORY'), 20, 2*20, 20);
 										}
+
 									}else{
+
 										if($playerContent->contains($item)){
-											if($this->economy->getWallet($player->getName(), 'SkyCoins') >= $price){
-												$this->economy->giveMoney($player->getName(), 'SkyCoins', $price);
-												$playerContent->removeItem($item);
-												$player->addTitle("\n", "§a".$this->translator->get('YOU_SOLD', ["§7".$qtd."x", "§b".$itemName."§a", "§e".$priceString."§a"]), 20, 2*20, 20);
-											}
+
+											$this->economy->giveMoney($player->getName(), 'SkyCoins', $price);
+											$playerContent->removeItem($item);
+											$player->addTitle("\n", "§a".$this->translator->get('YOU_SOLD', ["§7".$qtd."x", "§b".$itemName."§a", "§e".$priceString."§a"]), 20, 2*20, 20);
+
+
 										}else{
 											$player->addTitle("\n", "§c".$this->translator->get('YOU_DO_NOT_HAVE_ITEM', ["§7".$qtd."x", "§b".$itemName."§c"]), 20, 2*20, 20);
 										}
+
 									}
 
 									if($response[$this->translator->get('FORM_SHOP_ENABLE_ONECLICK', ["§aOneClick§r"])]){
@@ -415,10 +450,64 @@ class ClickShop extends PluginBase implements Listener{
 		}
 	}
 
+	/** 
+    * Get next shopId in config.yml and update config.yml
+    * @access protected
+    * @return String
+    */
+	protected function getShopId(){
+	    $shopId = $this->config->get('NextShopId');
+
+	    $newShopId = $shopId;
+	    $newShopId++;
+	    $this->config->set('NextShopId', $newShopId);
+	    $this->config->save();
+	    
+	    return $shopId;
+	}
+
+
+	/** 
+    * set shop id in shopids.yml
+    * @access public 
+    * @param pocketmine\item\Item $item
+    * @param String $enchantments
+    * @return String
+    */
+	public function createShopId(Item $item, $enchantments=false){
+		$itemId = $item->getId();
+		$itemMeta = $item->getDamage();
+
+		$itemData = array(
+			"id" => $itemId,
+			"meta" => $itemMeta
+		);
+
+		if($enchantments) $itemData['enchants'] = $enchantments;
+
+		$shopId = $this->getShopId();
+
+		$this->shopIds->set($shopId, $itemData);
+		$this->shopIds->save();
+
+		return $shopId;
+	}
+
+	/** 
+    * get Item instanse of given shop id
+    * @access public 
+    * @param Strind $id
+    * @return pocketmine\item\Item|Bool
+    */
+	public function getShopItem($id){
+		$item = $this->shopIds->get($id) ?? false;
+		if($item === false) return false;
+
+		return Item::get($item['id'], $item['meta'], 1);
+	}
 
 	/** 
     * Check shop owner's and recipient's inventory deppending of shop type (selling or buying)
-    * TODO: Add support to check item with meta
     * @access public 
     * @param pocketmine\Player $player
     * @param pocketmine\inventory\Inventory $playerInv
@@ -493,15 +582,15 @@ class ClickShop extends PluginBase implements Listener{
     * @access public
     * @param String $playerName
     * @param pocketmine\block\Block $block
-    * @param Int $itemID
+    * @param String $shopId
     * @return void
     */
-	public function enableOneClick($playerName, $block, $itemID){
+	public function enableOneClick($playerName, $block, $shopId){
 		$posString = $block->getX().";".$block->getX().";".$block->getZ();
 
 		$this->oneClicks[$playerName][] = array(
 			'pos' => $posString,
-			'itemID' => $itemID
+			'shopId' => $shopId
 		);
 	}
 
@@ -511,15 +600,15 @@ class ClickShop extends PluginBase implements Listener{
     * @access public
     * @param String $playerName
     * @param pocketmine\block\Block $block
-    * @param Int $itemID
+    * @param String $shopId
     * @return Bool
     */
-	public function isEnabledOneClick($playerName, $block, $itemID){
+	public function isEnabledOneClick($playerName, $block, $shopId){
 		$posString = $block->getX().";".$block->getX().";".$block->getZ();
 
 		if(isset($this->oneClicks[$playerName])){
 			foreach ($this->oneClicks[$playerName] as $instance){
-				if($instance['pos'] == $posString && $instance['itemID'] == $itemID){
+				if($instance['pos'] == $posString && $instance['shopId'] == $shopId){
 					return true;
 				}
 			}
@@ -534,7 +623,7 @@ class ClickShop extends PluginBase implements Listener{
     * @access public
     * @param String $playerName
     * @param pocketmine\block\Block $block
-    * @param Int $itemID
+    * @param String $shopId
     * @return Bool
     */
 	public function disableOneClick($playerName){
@@ -553,6 +642,19 @@ class ClickShop extends PluginBase implements Listener{
 
 		$this->disableOneClick($player->getName());
 
+	}
+
+
+	/** 
+    * Prevent players from creating sign shop from scratch
+    * @access public
+    * @param pocketmine\event\block\SignChangeEvent $sign
+    * @return void
+    */
+	public function onSignCreate(SignChangeEvent $sign){
+	  if(preg_match("/(?:§8\[)([\w]+)(?:\])/", $sign->getLine(3))){
+	  	$sign->setLine(3, "");
+	  }
 	}
 
 	/** 

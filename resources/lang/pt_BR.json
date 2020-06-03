@@ -19,8 +19,8 @@
 	"SIGN_NEEDS_TO_BE_CLOSE_CHEST": "É preciso que a placa esteja proxima à um baú.",
 
 	"FORM_SHOP_USING_TITLE": "Loja de {arg1}",
-	"FORM_SHOP_BUYING_LABEL": "Você está comprando:",
-	"FORM_SHOP_SELLING_LABEL": "Você está vendendo:",
+	"FORM_SHOP_BUYING_LABEL": "Você está {arg1}comprando:",
+	"FORM_SHOP_SELLING_LABEL": "Você está {arg1}vendendo:",
 	"FORM_SHOP_ENABLE_ONECLICK": "Ativar {arg1} para esta loja",
 	"FORM_SHOP_ONECLICK_DESCRIPTION": "Com {arg1} você não verá este formulário até sua proxima sessão e comprará/venderá diretamente da placa.",
 	"FORM_SHOP_PRESS_ESC_OR_X": "Clique no 'X' para cancelar",
@@ -34,5 +34,6 @@
 	"YOU_DONT_HAVE_MONEY_ENOUGH": "Você não tem dinheiro suficiente para esta compra.",
 	"OWNER_DONT_HAVE_MONEY_ENOUGH": "{arg1} não tem dinheiro suficiente para comprar de você.",
 	"YOU_BOUGHT": "Você comprou {arg1} {arg2} por {arg3}!",
-	"YOU_SOLD": "Você vendeu {arg1} {arg2} por {arg3}!"
+	"YOU_SOLD": "Você vendeu {arg1} {arg2} por {arg3}!",
+	"INVALID_SHOP": "Loja inválida."
 }
