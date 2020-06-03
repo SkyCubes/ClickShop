@@ -7,3 +7,4 @@ Shop plugin of SkyCubes, integrated with Economy
 - Translate item names
 - Add command to create shop without item in hand
 - Block Air(0) shop creation
+- Add documentation to readme.md
