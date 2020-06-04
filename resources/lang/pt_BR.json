@@ -22,7 +22,7 @@
 	"FORM_SHOP_BUYING_LABEL": "Você está {arg1}comprando:",
 	"FORM_SHOP_SELLING_LABEL": "Você está {arg1}vendendo:",
 	"FORM_SHOP_ENABLE_ONECLICK": "Ativar {arg1} para esta loja",
-	"FORM_SHOP_ONECLICK_DESCRIPTION": "Com {arg1} você não verá este formulário até sua proxima sessão e comprará/venderá diretamente da placa.",
+	"FORM_SHOP_ONECLICK_DESCRIPTION": "Com {arg1} você não verá este popup até sua proxima sessão e comprará/venderá diretamente da placa.",
 	"FORM_SHOP_PRESS_ESC_OR_X": "Clique no 'X' para cancelar",
 
 	"YOU_ENABLED_ONECLICK": "Você ativou {arg1} para esta loja durante esta sessão.",
