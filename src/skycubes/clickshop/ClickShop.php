@@ -30,7 +30,7 @@ class ClickShop extends PluginBase implements Listener{
 	private $shopIds;
 
 	protected $shopCreationQueue = [];
-
+	public $cooldowns = [];
 	protected $oneClicks = [];
 
 	public function onLoad(){
@@ -153,17 +153,25 @@ class ClickShop extends PluginBase implements Listener{
     * @return mixed
     */
 	public function onBlockTouch(PlayerInteractEvent $event){
+
+
 		$player = $event->getPlayer();
 		$block = $event->getBlock();
 		$item = $event->getItem();
 
+		if(isset($this->cooldowns[$player->getName()]) && $this->cooldowns[$player->getName()] > time()){
+			return false;
+		}
+
+		$this->cooldowns[$player->getName()] = time() + 0.1;
+		
 		if($block->getId() == 63 || $block->getId() == 68){
 
 			$position = new Vector3($block->getX(), $block->getY(), $block->getZ());
 			$sign = $block->getLevel()->getTile($position);
 
-			// if action is TAP with 'left click'
-			if($event->getAction() === 0){
+			// if action is TAP with 'left click' or 'right click'
+			if($event->getAction() === 0 || $event->getAction() === 1){
 
 
 				if(isset($this->shopCreationQueue[$player->getName()])){ // CHECK IF EXISTS SHOP CREATION QUEUE
@@ -433,7 +441,7 @@ class ClickShop extends PluginBase implements Listener{
 
 									if($response[$this->translator->get('FORM_SHOP_ENABLE_ONECLICK', ["§aOneClick§r"])]){
 										$player->sendTip($this->translator->get('YOU_ENABLED_ONECLICK', ["§aOneClick§r"]));
-										$this->enableOneClick($player->getName(), $block, $item->getId());
+										$this->enableOneClick($player->getName(), $block, $shopId);
 									}
 
 								}
